@@ -1,0 +1,11 @@
+video bg: https://github.com/Febinseb/febiverse-hero-video/releases/download/bg-jvp/MISSION.SUNDAY.mp4
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA3-HQO7whwElJgCz_uULDBCil9sWj4MW8",
+  authDomain: "velankanni-parish-jvp.firebaseapp.com",
+  projectId: "velankanni-parish-jvp",
+  storageBucket: "velankanni-parish-jvp.firebasestorage.app",
+  messagingSenderId: "590487161134",
+  appId: "1:590487161134:web:43e4bcd8e1f1707fa652bf",
+  measurementId: "G-VR814V9TDH"
+};

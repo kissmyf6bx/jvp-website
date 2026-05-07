@@ -1,0 +1,17 @@
+/* HEADINGS */
+@font-face {
+  font-family: "headingFont";
+  src: url("/src/assets/fonts/heading.ttf");
+}
+
+/* BODY */
+@font-face {
+  font-family: "bodyFont";
+  src: url("/src/assets/fonts/body.ttf");
+}
+
+/* SUBHEADINGS */
+@font-face {
+  font-family: "subFont";
+  src: url("/src/assets/fonts/subheading.ttf");
+}

@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+body {
+  background: black;
+  color: white;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: black;
+}
+
+section {
+  scroll-snap-align: start;
+}
+
+body {
+  font-feature-settings: "ss01", "ss02";
+  -webkit-font-smoothing: antialiased;
+}
+
+section {
+  padding-top: 6rem;
+  padding-bottom: 6rem;
+}
+
+img {
+  transition: transform 0.6s ease, filter 0.6s ease;
+}
+body {
+  background: black;
+  color: white;
+}
