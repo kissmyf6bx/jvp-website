@@ -16,6 +16,10 @@ import EventDetail from "./pages/EventDetail";
 import EventsPage from "./pages/EventsPage";
 import Admin from "./pages/Admin";
 
+import {
+  Helmet
+} from "react-helmet-async";
+
 import { loginWithGoogle } from "./utils/auth";
 
 import { auth } from "./firebase";
