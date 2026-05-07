@@ -41,22 +41,21 @@ function Hero({
         {/* PROFILE / LOGIN */}
         <div className="absolute bottom-0 center z-10">
           {!user ? (
-            <button
-              onClick={handleLogin}
-              className="
-                bg-white
-                text-black
-                px-5
-                py-3
-                rounded-full
-                shadow-2xl
-                hover:scale-105
-                transition
-                font-medium
-              "
-            >
-              Login
-            </button>
+          <button
+            onClick={handleLogin}
+            className="
+              relative
+              z-50
+              pointer-events-auto
+              bg-white
+              text-black
+              px-6
+              py-3
+              rounded-full
+            "
+          >
+            Login
+          </button>
           ) : (
             <div className="relative">
               <button
