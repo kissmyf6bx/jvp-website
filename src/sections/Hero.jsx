@@ -11,12 +11,10 @@ function Hero({
   handleLogin,
   handlePhotoChange,
   clearProfilePhoto,
+  settings, // <--- Add this here
 }) {
   return (
-    <section
-      id="home"
-      className="relative h-screen w-full overflow-hidden bg-black text-white"
-    >
+    <section id="home" className="relative h-screen w-full overflow-hidden bg-black text-white">
       {/* VIDEO */}
       <video
         autoPlay
@@ -25,10 +23,12 @@ function Hero({
         playsInline
         webkit-playsinline="true"
         preload="auto"
+        poster="/assets/hero.png" // Keep your poster!
+        key={settings.heroVideo} // <--- Add a key so the video reloads if you change the URL in admin
         className="absolute inset-0 w-full h-full object-cover"
       >
         <source
-          src="https://github.com/kissmyf6bx/febiverse-hero-video/releases/download/bg-jvp/MISSION.SUNDAY.mp4"
+          src={settings.heroVideo} // <--- Dynamic Video URL
           type="video/mp4"
         />
       </video>
@@ -199,24 +199,24 @@ function Hero({
         </div>
 
         {/* TITLE */}
-        <motion.h1
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.4 }}
-          className="text-5xl md:text-7xl font-heading tracking-tight"
-        >
-          Velankanni Parish
-        </motion.h1>
+      <motion.h1
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1.4 }}
+        className="text-5xl md:text-7xl font-heading tracking-tight"
+      >
+        {settings.heroTitle} {/* <--- Dynamic Title */}
+      </motion.h1>
 
-        {/* SUBTEXT */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.2, duration: 1 }}
-          className="mt-4 text-gray-300 text-lg md:text-xl"
-        >
-          A place of faith and love
-        </motion.p>
+      {/* SUBTEXT */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.2, duration: 1 }}
+        className="mt-4 text-gray-300 text-lg md:text-xl"
+      >
+        {settings.heroDesc} {/* <--- Dynamic Description */}
+      </motion.p>
 
         {/* SOCIAL LINKS */}
         <motion.div

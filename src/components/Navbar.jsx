@@ -16,20 +16,13 @@ import {
 } from "../utils/notifications";
 
 function Navbar() {
-
   const navigate = useNavigate();
-
   const tapCountRef = useRef(0);
   const tapTimeoutRef = useRef(null);
 
   const handleSecretTap = () => {
     tapCountRef.current += 1;
-
-    console.log("Tap:", tapCountRef.current);
-
-    if (tapTimeoutRef.current) {
-      clearTimeout(tapTimeoutRef.current);
-    }
+    if (tapTimeoutRef.current) clearTimeout(tapTimeoutRef.current);
 
     tapTimeoutRef.current = setTimeout(() => {
       tapCountRef.current = 0;
@@ -85,12 +78,41 @@ function Navbar() {
     return () => unsubscribe();
   }, []);
 
+  // MOVED OUTSIDE USEEFFECT
+  const visibleNotifications = notifications.filter(
+    (notification) => !clearedNotificationIds.includes(notification.id)
+  );
+
+  const unreadNotifications = visibleNotifications.filter(
+    (notification) => !readNotificationIds.includes(notification.id)
+  );
+
+  const markNotificationRead = (id) => {
+    setReadNotificationIds((prev) => [...prev, id]);
+  };
+
+  const clearNotification = (id) => {
+    setClearedNotificationIds((prev) => [...prev, id]);
+  };
+
+  const openNotification = (notification) => {
+    markNotificationRead(notification.id);
+    if (notification.canOpen && notification.fullMessage) {
+      setActiveNotification(notification);
+    }
+  };
+
+  // MISSING FORMATTER ADDED
+  const formatNotificationDate = (timestamp) => {
+    if (!timestamp) return "";
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+
   return (
     <>
       <motion.div className="fixed top-0 left-0 w-full z-[9999] bg-black/30 backdrop-blur-md border-b border-white/10">
         <div className="flex items-center justify-between px-5 py-4">
-
-          {/* 🔥 LOGO WITH SECRET TAP */}
           <div className="flex items-center gap-3">
             <img
               src="/logo.png"
@@ -98,7 +120,6 @@ function Navbar() {
               className="h-10 object-contain cursor-pointer"
               alt="Velankanni Parish Logo"
             />
-
             <button
               onClick={() => setIsMassTimingsOpen(true)}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white"
@@ -110,9 +131,12 @@ function Navbar() {
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsNotificationsOpen(true)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white relative"
             >
               <FiBell />
+              {unreadNotifications.length > 0 && (
+                <span className="absolute top-2 right-2 h-2.5 w-2.5 rounded-full bg-red-500 border border-black"></span>
+              )}
             </button>
 
             <button
@@ -143,16 +167,12 @@ function Navbar() {
             >
               <div className="mb-5 flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-gray-500">
-                    Parish Schedule
-                  </p>
+                  <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Parish Schedule</p>
                   <h2 className="mt-1 text-2xl font-heading">Mass Timings</h2>
                 </div>
-
                 <button
                   onClick={() => setIsMassTimingsOpen(false)}
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/10 text-xl text-white"
-                  aria-label="Close Mass timings"
                 >
                   <FiX />
                 </button>
@@ -160,9 +180,7 @@ function Navbar() {
 
               <div className="space-y-3">
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <h3 className="mb-3 text-sm font-semibold text-white">
-                    Daily Mass
-                  </h3>
+                  <h3 className="mb-3 text-sm font-semibold text-white">Daily Mass</h3>
                   <div className="space-y-2 text-sm text-gray-300">
                     <p className="flex justify-between gap-4">
                       <span>Monday to Friday</span>
@@ -176,9 +194,7 @@ function Navbar() {
                 </div>
 
                 <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <h3 className="mb-3 text-sm font-semibold text-white">
-                    Sunday Mass
-                  </h3>
+                  <h3 className="mb-3 text-sm font-semibold text-white">Sunday Mass</h3>
                   <div className="space-y-2 text-sm text-gray-300">
                     <p className="flex justify-between gap-4">
                       <span>Morning</span>
@@ -192,8 +208,7 @@ function Navbar() {
                 </div>
 
                 <p className="rounded-2xl border border-white/10 bg-white/5 p-4 text-xs leading-5 text-gray-400">
-                  Special events or feast-day changes will be shared through the
-                  WhatsApp group or push notifications.
+                  Special events or feast-day changes will be shared through the WhatsApp group or push notifications.
                 </p>
 
                 <a
@@ -211,10 +226,7 @@ function Navbar() {
                   rel="noopener noreferrer"
                   className="block text-center text-xs text-gray-500 transition hover:text-gray-300"
                 >
-                  Website developed by{" "}
-                  <span className="text-blue-400 hover:text-blue-300">
-                    Febin | Febiverse
-                  </span>
+                  Website developed by <span className="text-blue-400 hover:text-blue-300">Febin | Febiverse</span>
                 </a>
               </div>
             </motion.div>
@@ -240,11 +252,9 @@ function Navbar() {
             >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-heading">Notifications</h2>
-
                 <button
                   onClick={() => setIsNotificationsOpen(false)}
                   className="w-10 h-10 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-white text-xl"
-                  aria-label="Close notifications"
                 >
                   <FiX />
                 </button>
@@ -254,21 +264,15 @@ function Navbar() {
                 <>
                   <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
                     <p className="text-white text-base">No notifications yet</p>
-                    <p className="text-gray-400 text-sm mt-2">
-                      Parish updates and announcements will appear here.
-                    </p>
+                    <p className="text-gray-400 text-sm mt-2">Parish updates and announcements will appear here.</p>
                   </div>
-
                   <a
                     href="https://www.febiverse.tech"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-5 block text-center text-xs text-gray-500 transition hover:text-gray-300"
                   >
-                    Website developed by{" "}
-                    <span className="text-blue-400 hover:text-blue-300">
-                      Febin | Febiverse
-                    </span>
+                    Website developed by <span className="text-blue-400 hover:text-blue-300">Febin | Febiverse</span>
                   </a>
                 </>
               ) : (
@@ -279,87 +283,62 @@ function Navbar() {
                       const canOpen = notification.canOpen && notification.fullMessage;
 
                       return (
-                      <div
-                        key={notification.id}
-                        className="overflow-hidden rounded-2xl border border-white/10 bg-[#111]"
-                      >
-                        <div
-                          onClick={() => openNotification(notification)}
-                          className={`overflow-hidden ${
-                            canOpen ? "cursor-pointer" : "cursor-default"
-                          }`}
-                        >
-                          {notification.image && (
-                            <img
-                              src={notification.image}
-                              alt={notification.title || "Notification"}
-                              className="h-36 w-full object-cover"
-                            />
-                          )}
+                        <div key={notification.id} className="overflow-hidden rounded-2xl border border-white/10 bg-[#111]">
+                          <div
+                            onClick={() => openNotification(notification)}
+                            className={`overflow-hidden ${canOpen ? "cursor-pointer" : "cursor-default"}`}
+                          >
+                            {notification.image && (
+                              <img
+                                src={notification.image}
+                                alt={notification.title || "Notification"}
+                                className="h-36 w-full object-cover"
+                              />
+                            )}
 
-                          <div className="p-5">
-                            <div className="mb-3 flex items-start justify-between gap-4">
-                              <div className="min-w-0">
-                                <div className="mb-2 flex flex-wrap items-center gap-2">
-                                  {isUnread && (
-                                    <span className="rounded-full bg-blue-500 px-2.5 py-1 text-xs font-medium text-white">
-                                      New
-                                    </span>
-                                  )}
-
-                                  {canOpen && (
-                                    <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-gray-300">
-                                      Tap to read
-                                    </span>
-                                  )}
+                            <div className="p-5">
+                              <div className="mb-3 flex items-start justify-between gap-4">
+                                <div className="min-w-0">
+                                  <div className="mb-2 flex flex-wrap items-center gap-2">
+                                    {isUnread && (
+                                      <span className="rounded-full bg-blue-500 px-2.5 py-1 text-xs font-medium text-white">New</span>
+                                    )}
+                                    {canOpen && (
+                                      <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-gray-300">Tap to read</span>
+                                    )}
+                                  </div>
+                                  <h3 className="text-lg font-semibold text-white">{notification.title}</h3>
                                 </div>
-
-                                <h3 className="text-lg font-semibold text-white">
-                                  {notification.title}
-                                </h3>
+                                <div className="flex shrink-0 items-center gap-2">
+                                  <span className="text-xs text-gray-500">{formatNotificationDate(notification.createdAt)}</span>
+                                  {canOpen && <FiChevronRight className="text-gray-400" />}
+                                </div>
                               </div>
 
-                              <div className="flex shrink-0 items-center gap-2">
-                                <span className="text-xs text-gray-500">
-                                  {formatNotificationDate(notification.createdAt)}
-                                </span>
+                              <p className="text-sm leading-relaxed text-gray-300">{notification.message}</p>
 
-                                {canOpen && (
-                                  <FiChevronRight className="text-gray-400" />
-                                )}
-                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  clearNotification(notification.id);
+                                }}
+                                className="mt-4 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs text-gray-300 transition hover:bg-white/15 hover:text-white"
+                              >
+                                Clear
+                              </button>
                             </div>
-
-                            <p className="text-sm leading-relaxed text-gray-300">
-                              {notification.message}
-                            </p>
-
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                clearNotification(notification.id);
-                              }}
-                              className="mt-4 rounded-full border border-white/10 bg-white/10 px-3 py-1.5 text-xs text-gray-300 transition hover:bg-white/15 hover:text-white"
-                            >
-                              Clear
-                            </button>
                           </div>
                         </div>
-                      </div>
-                    );
+                      );
                     })}
                   </div>
-
                   <a
                     href="https://www.febiverse.tech"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-5 block text-center text-xs text-gray-500 transition hover:text-gray-300"
                   >
-                    Website developed by{" "}
-                    <span className="text-blue-400 hover:text-blue-300">
-                      Febin | Febiverse
-                    </span>
+                    Website developed by <span className="text-blue-400 hover:text-blue-300">Febin | Febiverse</span>
                   </a>
                 </>
               )}
@@ -394,18 +373,12 @@ function Navbar() {
 
               <div className="flex items-start justify-between gap-5 border-b border-white/10 p-6">
                 <div>
-                  <p className="mb-2 text-sm text-gray-500">
-                    {formatNotificationDate(activeNotification.createdAt)}
-                  </p>
-                  <h2 className="text-3xl font-heading">
-                    {activeNotification.title}
-                  </h2>
+                  <p className="mb-2 text-sm text-gray-500">{formatNotificationDate(activeNotification.createdAt)}</p>
+                  <h2 className="text-3xl font-heading">{activeNotification.title}</h2>
                 </div>
-
                 <button
                   onClick={() => setActiveNotification(null)}
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/10 text-xl text-white"
-                  aria-label="Close notification"
                 >
                   <FiX />
                 </button>
@@ -428,50 +401,16 @@ function Navbar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="
-              fixed
-              inset-0
-              z-[10000]
-              bg-black/95
-              backdrop-blur-2xl
-            "
+            className="fixed inset-0 z-[10000] bg-black/95 backdrop-blur-2xl"
           >
-            {/* CLOSE BUTTON */}
             <button
               onClick={() => setIsOpen(false)}
-              className="
-                fixed
-                top-6
-                right-6
-                z-[10001]
-                w-12
-                h-12
-                rounded-full
-                bg-white/10
-                border
-                border-white/10
-                flex
-                items-center
-                justify-center
-                text-white
-                text-2xl
-              "
-              aria-label="Close menu"
+              className="fixed top-6 right-6 z-[10001] w-12 h-12 rounded-full bg-white/10 border border-white/10 flex items-center justify-center text-white text-2xl"
             >
               <FiX />
             </button>
 
-            {/* MENU CONTENT */}
-            <div
-              className="
-                h-full
-                flex
-                flex-col
-                items-center
-                justify-center
-                gap-8
-              "
-            >
+            <div className="h-full flex flex-col items-center justify-center gap-8">
               {menuItems.map((item, i) => (
                 <motion.button
                   key={i}
@@ -479,13 +418,7 @@ function Navbar() {
                   initial={{ opacity: 0, y: 40 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.1 }}
-                  className="
-                    text-white
-                    text-4xl
-                    md:text-6xl
-                    font-heading
-                    tracking-tight
-                  "
+                  className="text-white text-4xl md:text-6xl font-heading tracking-tight"
                 >
                   {item.name}
                 </motion.button>
@@ -498,10 +431,7 @@ function Navbar() {
               rel="noopener noreferrer"
               className="fixed bottom-8 left-1/2 z-[10001] -translate-x-1/2 text-center text-xs text-gray-500 transition hover:text-gray-300"
             >
-              Website developed by{" "}
-              <span className="text-blue-400 hover:text-blue-300">
-                Febin | Febiverse
-              </span>
+              Website developed by <span className="text-blue-400 hover:text-blue-300">Febin | Febiverse</span>
             </a>
           </motion.div>
         )}

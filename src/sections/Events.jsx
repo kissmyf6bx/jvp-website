@@ -13,33 +13,29 @@ import { motion } from "framer-motion";
 
 import { Link } from "react-router-dom";
 
+import { onSnapshot } from "firebase/firestore";
+
 function Events() {
 
   const [events, setEvents] = useState([]);
 
   // FETCH EVENTS
   useEffect(() => {
+    const q = query(
+      collection(db, "events"),
+      orderBy("createdAt", "desc")
+    );
 
-    const fetchEvents = async () => {
-
-      const q = query(
-        collection(db, "events"),
-        orderBy("createdAt", "desc")
-      );
-
-      const snapshot = await getDocs(q);
-
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
 
       setEvents(data);
+    });
 
-    };
-
-    fetchEvents();
-
+    return () => unsubscribe();
   }, []);
 
   // FILTER DELETED

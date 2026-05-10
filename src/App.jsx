@@ -24,9 +24,13 @@ import { auth } from "./firebase";
 
 import { onAuthStateChanged, getRedirectResult } from "firebase/auth";
 
+import { useSettings } from "./hooks/useSettings";
+
 function Home({ user, handleLogin }) {
   const [showMenu, setShowMenu] = useState(false);
   const navigate = useNavigate();
+
+  const { settings } = useSettings();
 
   useEffect(() => {
     const savedPosition = sessionStorage.getItem("homeScrollPosition");
@@ -100,13 +104,14 @@ function Home({ user, handleLogin }) {
       <Navbar />
 
       {/* HERO */}
-      <Hero
+        <Hero
         user={user}
         showMenu={showMenu}
         setShowMenu={setShowMenu}
         profilePhoto={profilePhoto}
         handleLogin={handleLogin}
         handlePhotoChange={handlePhotoChange}
+        settings={settings} // <--- Pass settings here
         clearProfilePhoto={() => {
           localStorage.removeItem(`profilePhoto_${user.uid}`);
           setProfilePhoto("");
@@ -114,10 +119,10 @@ function Home({ user, handleLogin }) {
       />
 
       {/* ABOUT */}
-      <About />
+      <About settings={settings} />
 
       {/* MISSION */}
-      <Mission />
+      <Mission settings={settings} />
 
       {/* EVENTS */}
       <Events user={user} />
