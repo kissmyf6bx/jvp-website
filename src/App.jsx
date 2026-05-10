@@ -16,160 +16,49 @@ import EventDetail from "./pages/EventDetail";
 import EventsPage from "./pages/EventsPage";
 import Admin from "./pages/Admin";
 
-import {
-  Helmet
-} from "react-helmet-async";
+import { Helmet } from "react-helmet-async";
 
 import { loginWithGoogle } from "./utils/auth";
 
 import { auth } from "./firebase";
 
-import {
-  onAuthStateChanged
-} from "firebase/auth";
-
-<Helmet>
-
-  {/* TITLE */}
-  <title>
-    Velankanni Parish Youth |
-    Bangalore
-  </title>
-
-  {/* DESCRIPTION */}
-  <meta
-    name="description"
-    content="
-      Official website of
-      Velankanni Parish Youth.
-      Explore parish events,
-      mission, activities,
-      donations and community.
-    "
-  />
-
-  {/* KEYWORDS */}
-  <meta
-    name="keywords"
-    content="
-      Velankanni Parish,
-      JVP,
-      Bangalore Church,
-      Catholic Youth,
-      Parish Events,
-      Velankanni Youth
-    "
-  />
-
-  {/* AUTHOR */}
-  <meta
-    name="author"
-    content="
-      Velankanni Parish Youth
-    "
-  />
-
-  {/* OPEN GRAPH */}
-  <meta
-    property="og:title"
-    content="
-      Velankanni Parish Youth
-    "
-  />
-
-  <meta
-    property="og:description"
-    content="
-      Official parish youth
-      website of Velankanni
-      Parish Bangalore.
-    "
-  />
-
-  <meta
-    property="og:image"
-    content="/og-image.png"
-  />
-
-  <meta
-    property="og:type"
-    content="website"
-  />
-
-  {/* TWITTER */}
-  <meta
-    name="twitter:card"
-    content="summary_large_image"
-  />
-
-  {/* STRUCTURED DATA */}
-  <script type="application/ld+json">
-    {`
-      {
-        "@context": "https://schema.org",
-        "@type": "Organization",
-        "name": "Velankanni Parish Youth",
-        "url": "https://YOURDOMAIN.com",
-        "logo": "https://YOURDOMAIN.com/jvp-logo.png",
-        "description": "Official website of Velankanni Parish Youth Bangalore.",
-        "sameAs": [
-          "https://instagram.com/YOURPAGE"
-        ]
-      }
-    `}
-  </script>
-
-</Helmet>
+import { onAuthStateChanged, getRedirectResult } from "firebase/auth";
 
 function Home({ user, handleLogin }) {
-
   const [showMenu, setShowMenu] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+    const savedPosition = sessionStorage.getItem("homeScrollPosition");
 
-  const savedPosition = sessionStorage.getItem(
-    "homeScrollPosition"
-  );
-
-  if (savedPosition) {
-
-    setTimeout(() => {
-
-      window.scrollTo({
-        top: parseInt(savedPosition),
-        behavior: "instant"
-      });
-
-    }, 50);
-
-  }
-
-}, []);
+    if (savedPosition) {
+      setTimeout(() => {
+        window.scrollTo({
+          top: parseInt(savedPosition),
+          behavior: "instant"
+        });
+      }, 50);
+    }
+  }, []);
 
   // USER-SPECIFIC PROFILE PHOTO
   const [profilePhoto, setProfilePhoto] = useState("");
 
   // LOAD USER PHOTO
   useEffect(() => {
-
     if (!user) return;
 
-    const savedPhoto = localStorage.getItem(
-      `profilePhoto_${user.uid}`
-    );
+    const savedPhoto = localStorage.getItem(`profilePhoto_${user.uid}`);
 
     if (savedPhoto) {
       setProfilePhoto(savedPhoto);
     } else {
       setProfilePhoto("");
     }
-
   }, [user]);
 
   // CHANGE PHOTO
   const handlePhotoChange = (e) => {
-
     const file = e.target.files[0];
 
     if (!file) return;
@@ -177,12 +66,7 @@ function Home({ user, handleLogin }) {
     const reader = new FileReader();
 
     reader.onloadend = () => {
-
-      localStorage.setItem(
-        `profilePhoto_${user.uid}`,
-        reader.result
-      );
-
+      localStorage.setItem(`profilePhoto_${user.uid}`, reader.result);
       setProfilePhoto(reader.result);
     };
 
@@ -201,6 +85,17 @@ function Home({ user, handleLogin }) {
 
   return (
     <>
+      <Helmet>
+        <title>Velankanni Parish | Mysore</title>
+
+        <meta
+          name="description"
+          content="Official website of Velankanni Parish - JP Nagar, Mysore."
+        />
+
+        <meta property="og:image" content="/og-image.png" />
+      </Helmet>
+
       {/* NAVBAR */}
       <Navbar />
 
@@ -212,7 +107,6 @@ function Home({ user, handleLogin }) {
         profilePhoto={profilePhoto}
         handleLogin={handleLogin}
         handlePhotoChange={handlePhotoChange}
-        handleDonate={handleDonate}
         clearProfilePhoto={() => {
           localStorage.removeItem(`profilePhoto_${user.uid}`);
           setProfilePhoto("");
@@ -241,35 +135,39 @@ function Home({ user, handleLogin }) {
 }
 
 function App() {
-
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   // AUTH LISTENER
   useEffect(() => {
+    // 1. Manually resolve the mobile redirect result
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result) {
+          console.log("Successfully logged in via redirect:", result.user);
+        }
+      })
+      .catch((error) => {
+        console.error("Redirect resolution error:", error);
+        alert("Mobile login failed: " + error.message);
+      });
 
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (currentUser) => {
-        setUser(currentUser);
+    // 2. Standard Auth Listener
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      console.log("AUTH USER:", currentUser);
+
+      setUser(currentUser);
+      setLoading(false);
+
+      // DONATE REDIRECT
+      if (currentUser && sessionStorage.getItem("pendingDonateRedirect")) {
+        sessionStorage.removeItem("pendingDonateRedirect");
+        window.location.href = "/donate";
       }
-    );
+    });
 
     return () => unsubscribe();
-
   }, []);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const shouldRedirectToDonate = sessionStorage.getItem(
-      "pendingDonateRedirect"
-    );
-
-    if (shouldRedirectToDonate) {
-      sessionStorage.removeItem("pendingDonateRedirect");
-      window.location.href = "/donate";
-    }
-  }, [user]);
 
   // LOGIN
   const handleLogin = async () => {
@@ -280,43 +178,32 @@ function App() {
     }
   };
 
+  if (loading) {
+    return <div className="h-screen bg-black" />;
+  }
+
   return (
     <Routes>
-
       {/* HOME */}
       <Route
         path="/"
-        element={
-          <Home
-            user={user}
-            handleLogin={handleLogin}
-          />
-        }
+        element={<Home user={user} handleLogin={handleLogin} />}
       />
 
       {/* EVENTS PAGE */}
-      <Route
-        path="/events"
-        element={<EventsPage />}
-      />
+      <Route path="/events" element={<EventsPage />} />
 
       {/* EVENT DETAIL */}
-      <Route
-        path="/event/:id"
-        element={<EventDetail />}
-      />
+      <Route path="/event/:id" element={<EventDetail />} />
 
       {/* ADMIN */}
-      <Route
-        path="/admin"
-        element={<Admin user={user} />}
-      />
+      <Route path="/admin" element={<Admin user={user} />} />
 
+      {/* DONATE */}
       <Route
-      path="/donate"
-      element={user ? <DonatePage /> : <Navigate to="/" replace />}
+        path="/donate"
+        element={user ? <DonatePage /> : <Navigate to="/" replace />}
       />
-
     </Routes>
   );
 }
