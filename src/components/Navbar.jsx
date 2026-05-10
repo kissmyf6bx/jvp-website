@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiBell, FiCalendar, FiChevronRight, FiMenu, FiX } from "react-icons/fi";
 import {
@@ -15,6 +16,31 @@ import {
 } from "../utils/notifications";
 
 function Navbar() {
+
+  const navigate = useNavigate();
+
+  const tapCountRef = useRef(0);
+  const tapTimeoutRef = useRef(null);
+
+  const handleSecretTap = () => {
+    tapCountRef.current += 1;
+
+    console.log("Tap:", tapCountRef.current);
+
+    if (tapTimeoutRef.current) {
+      clearTimeout(tapTimeoutRef.current);
+    }
+
+    tapTimeoutRef.current = setTimeout(() => {
+      tapCountRef.current = 0;
+    }, 2500);
+
+    if (tapCountRef.current >= 5) {
+      tapCountRef.current = 0;
+      navigate("/admin");
+    }
+  };
+
   const [isOpen, setIsOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isMassTimingsOpen, setIsMassTimingsOpen] = useState(false);
@@ -34,159 +60,64 @@ function Navbar() {
 
   const scrollToSection = (id) => {
     const el = document.getElementById(id);
-
-    if (el) {
-      el.scrollIntoView({
-        behavior: "smooth",
-      });
-    }
-
+    if (el) el.scrollIntoView({ behavior: "smooth" });
     setIsOpen(false);
   };
 
-  const formatNotificationDate = (createdAt) => {
-    const date = createdAt?.toDate ? createdAt.toDate() : null;
-    if (!date) return "Just now";
-
-    return date.toLocaleDateString("en-IN", {
-      day: "numeric",
-      month: "short",
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
-
-  const visibleNotifications = notifications.filter(
-    (notification) => !clearedNotificationIds.includes(notification.id)
-  );
-
-  const unreadNotifications = visibleNotifications.filter(
-    (notification) => !readNotificationIds.includes(notification.id)
-  );
-
-  const markNotificationRead = (id) => {
-    setReadNotificationIds((currentIds) => {
-      if (currentIds.includes(id)) return currentIds;
-
-      const nextIds = [...currentIds, id];
-      localStorage.setItem("readNotifications", JSON.stringify(nextIds));
-      return nextIds;
-    });
-  };
-
-  const clearNotification = (id) => {
-    setClearedNotificationIds((currentIds) => {
-      if (currentIds.includes(id)) return currentIds;
-
-      const nextIds = [...currentIds, id];
-      localStorage.setItem("clearedNotifications", JSON.stringify(nextIds));
-      return nextIds;
-    });
-
-    markNotificationRead(id);
-  };
-
-  const openNotification = (notification) => {
-    markNotificationRead(notification.id);
-
-    if (notification.canOpen && notification.fullMessage) {
-      setActiveNotification(notification);
-    }
-  };
-
   useEffect(() => {
-    const storedReadIds = JSON.parse(
-      localStorage.getItem("readNotifications") || "[]"
-    );
-    const storedClearedIds = JSON.parse(
-      localStorage.getItem("clearedNotifications") || "[]"
-    );
-
-    setReadNotificationIds(storedReadIds);
-    setClearedNotificationIds(storedClearedIds);
-
     registerForPushNotifications();
     listenForForegroundNotifications();
 
-    const notificationsQuery = query(
+    const q = query(
       collection(db, "notifications"),
       orderBy("createdAt", "desc"),
       limit(20)
     );
 
-    const unsubscribe = onSnapshot(notificationsQuery, (snapshot) => {
+    const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-
       setNotifications(data);
     });
 
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const shouldLockScroll =
-      isNotificationsOpen || isMassTimingsOpen || activeNotification || isOpen;
-    const originalOverflow = document.body.style.overflow;
-
-    if (shouldLockScroll) {
-      document.body.style.overflow = "hidden";
-    }
-
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [isNotificationsOpen, isMassTimingsOpen, activeNotification, isOpen]);
-
   return (
     <>
-      {/* NAVBAR */}
-      <motion.div
-        initial={{ opacity: 0, y: -40 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 1.5, duration: 1 }}
-        className="fixed top-0 left-0 w-full z-[9999] bg-black/30 backdrop-blur-md border-b border-white/10"
-      >
+      <motion.div className="fixed top-0 left-0 w-full z-[9999] bg-black/30 backdrop-blur-md border-b border-white/10">
         <div className="flex items-center justify-between px-5 py-4">
+
+          {/* 🔥 LOGO WITH SECRET TAP */}
           <div className="flex items-center gap-3">
-            {/* LOGO */}
             <img
               src="/logo.png"
-              className="h-10 object-contain"
+              onClick={handleSecretTap}
+              className="h-10 object-contain cursor-pointer"
               alt="Velankanni Parish Logo"
             />
 
-            {/* MASS TIMINGS BUTTON */}
             <button
               onClick={() => setIsMassTimingsOpen(true)}
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/10 text-xl text-white backdrop-blur-md transition hover:bg-white/15"
-              aria-label="Open Mass timings"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white"
             >
               <FiCalendar />
             </button>
           </div>
 
           <div className="flex items-center gap-4">
-            {/* NOTIFICATION BUTTON */}
             <button
               onClick={() => setIsNotificationsOpen(true)}
-              className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/10 text-xl text-white backdrop-blur-md transition hover:bg-white/15"
-              aria-label="Open notifications"
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white"
             >
               <FiBell />
-
-              {unreadNotifications.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border border-black bg-red-500"></span>
-              )}
             </button>
 
-            {/* MENU BUTTON */}
             <button
               onClick={() => setIsOpen(true)}
               className="text-white text-2xl"
-              aria-label="Open menu"
             >
               <FiMenu />
             </button>
