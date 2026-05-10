@@ -2,8 +2,6 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithRedirect,
-  setPersistence,
-  browserLocalPersistence,
 } from "firebase/auth";
 import { auth } from "../firebase";
 
@@ -15,19 +13,18 @@ provider.setCustomParameters({
 
 export const loginWithGoogle = async () => {
   try {
-    // Force local persistence so the session survives tab closes
-    await setPersistence(auth, browserLocalPersistence);
-
-    // Default to Popup. It keeps the main React app alive in the background.
+    // Note: We removed setPersistence. Firebase defaults to local persistence automatically.
+    // By removing the 'await', we ensure the popup opens INSTANTLY after the click, 
+    // which stops iOS/Android from classifying it as a spam popup.
+    
     await signInWithPopup(auth, provider);
     
   } catch (err) {
     console.error("Login Error:", err);
     
-    // If the mobile browser aggressively blocks the popup, we catch the error 
-    // and ONLY then fallback to the redirect method.
+    // If a super-strict browser still blocks the popup, we gracefully fall back to redirect
     if (err.code === 'auth/popup-blocked') {
-      alert("Popup blocked by browser. Redirecting to login...");
+      console.warn("Popup blocked by strict browser. Falling back to redirect...");
       await signInWithRedirect(auth, provider);
     } else {
       alert("Authentication failed: " + err.message);
